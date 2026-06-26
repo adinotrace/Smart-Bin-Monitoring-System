@@ -76,6 +76,7 @@ unsigned long aExpectedSeq = 0, aPacketsReceived = 0, aPacketsLost = 0;
 int bFill = 0, bGas = 0;
 float bTemp = 0.0f, bRisk = 0.0f, bTrust = 1.00f;
 const char* nodeBStatus = "OFFLINE";
+const char* activePathB = "Unknown";
 unsigned long bExpectedSeq = 0, bPacketsReceived = 0, bPacketsLost = 0;
 
 // Node C Filtered Values
@@ -213,6 +214,29 @@ void readOwnSensors() {
   float t = dht.readTemperature();
   if (!isnan(t)) cTemp = t;
   cRisk = (cFill * 0.1f) + ((cGas / 1000.0f) * 1.5f) + (cTemp * 0.2f);
+
+  Serial.println("\n==============================");
+  Serial.println("NODE C SENSOR DEBUG");
+  Serial.println("==============================");
+  Serial.print("Top Raw Distance: "); Serial.println(rawTop);
+  Serial.print("Mid Raw Distance: "); Serial.println(rawMid);
+  Serial.print("Top Filtered Distance: "); Serial.println(cTopDistFiltered);
+  Serial.print("Mid Filtered Distance: "); Serial.println(cMidDistFiltered);
+  Serial.print("Top Covered: "); Serial.println(topCovered ? "YES" : "NO");
+  Serial.print("Mid Covered: "); Serial.println(midCovered ? "YES" : "NO");
+  Serial.print("Calculated Fill %: "); Serial.println(cFill);
+  Serial.print("Gas: "); Serial.println(cGas);
+  Serial.print("Temperature: "); Serial.println(cTemp);
+  Serial.print("Risk: "); Serial.println(cRisk);
+  Serial.print("Current Algorithm Branch: ");
+  if (topCovered) {
+    Serial.println("TOP RANGE");
+  } else if (midCovered) {
+    Serial.println("MID RANGE");
+  } else {
+    Serial.println("BOTTOM RANGE");
+  }
+  Serial.println("==============================\n");
 }
 
 const char* getStatusString(float risk, bool online) {
@@ -276,7 +300,10 @@ void publishAllMQTT() {
   maintainConnections();
   if (!mqttClient.connected()) return;
   publishMQTTNode("smartbin_revat_2026/A", aFill, aGas, aTemp, aRisk, aTrust, strcmp(nodeAStatus, "OFFLINE") != 0, nodeAStatus, activePathA);
-  publishMQTTNode("smartbin_revat_2026/B", bFill, bGas, bTemp, bRisk, bTrust, strcmp(nodeBStatus, "OFFLINE") != 0, nodeBStatus, "Unknown");
+  
+  const char* displayPathB = (strcmp(nodeBStatus, "OFFLINE") == 0) ? "Offline" : activePathB;
+  publishMQTTNode("smartbin_revat_2026/B", bFill, bGas, bTemp, bRisk, bTrust, strcmp(nodeBStatus, "OFFLINE") != 0, nodeBStatus, displayPathB);
+  
   publishMQTTNode("smartbin_revat_2026/C", cFill, cGas, cTemp, cRisk, cTrust, true, "ONLINE", "Gateway");
   publishNetworkStatus();
   Serial.println("[MQTT PUBLISHED] All nodes updated.");
@@ -433,7 +460,7 @@ void loop() {
         aExpectedSeq = 0; aPacketsReceived = 0; aPacketsLost = 0;
         Serial.println("[HELLO] Node A Booted.");
       } else if (strcmp(tokens[1], "B") == 0) {
-        lastNodeBRecvTime = now; nodeBStatus = "ONLINE";
+        lastNodeBRecvTime = now; nodeBStatus = "ONLINE"; activePathB = "Standalone B -> C";
         bExpectedSeq = 0; bPacketsReceived = 0; bPacketsLost = 0;
         Serial.println("[HELLO] Node B Booted.");
       }
@@ -462,7 +489,8 @@ void loop() {
       
       lastNodeARecvTime = now; lastNodeBRecvTime = now;
       nodeAStatus = "ONLINE"; nodeBStatus = "ONLINE";
-      activePathA = "A -> B -> C"; gatewayHasData = true;
+      activePathA = "A -> B -> C"; activePathB = "B -> C";
+      gatewayHasData = true;
       
       shouldAck = true; ackPrefix = "ACK,A"; ackSeq = aSeq;
     }
@@ -485,9 +513,10 @@ void loop() {
         updateStats("B", bSeq, bExpectedSeq, bPacketsReceived, bPacketsLost);
 
         bFill = atoi(tokens[2]); bGas = atoi(tokens[3]);
-        bTemp = atof(tokens[4]); bRisk = atof(tokens[5]); bTrust = atof(tokens[6]);
+        bTemp = atof(tokens[4]); bRisk = atof(tokens[5]); bTrust = 1.00f; // Standalone Trust
 
-        lastNodeBRecvTime = now; nodeBOnline = true; gatewayHasData = true;
+        lastNodeBRecvTime = now; nodeBStatus = "ONLINE"; activePathB = "Standalone B -> C";
+        gatewayHasData = true;
         
         shouldAck = true; ackPrefix = "ACK,B"; ackSeq = bSeq;
       } else {
