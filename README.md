@@ -1,7 +1,8 @@
+
 # Smart Bin Monitoring System
 
 ## Project Demo
-*(Drag and drop your video file here on the GitHub website editor to embed the player)*
+(https://github.com/user-attachments/assets/e5ae2202-167d-40ce-a57e-f0119c5bca9f)
 
 ## Project Overview
 The Smart Bin Monitoring System is an IoT-based solution designed to monitor waste levels, detect hazardous gases, and measure internal temperatures of smart bins. It uses a robust LoRa-based communication architecture to transmit telemetry data from edge nodes to a central gateway, which then pushes the data to the cloud via MQTT and ThingSpeak. A sleek, modern Next.js dashboard provides real-time visualization of the network topology, node status, and sensor readings.
