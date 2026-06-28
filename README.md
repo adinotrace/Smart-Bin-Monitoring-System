@@ -85,7 +85,7 @@ Ensure ESP32 boards have adequate physical separation (>1 meter) during indoor l
 - Transition from standard LoRa to LoRaWAN (TTN/Helium) for city-wide scalability.
 - Solar-powered deep-sleep optimization for Edge Nodes.
 
-## Authors
+## Author
 - **Aditya Prasad**
 
 *Department of Computer Science (Data Science)*  
