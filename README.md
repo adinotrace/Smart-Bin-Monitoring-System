@@ -83,8 +83,6 @@ Ensure ESP32 boards have adequate physical separation (>1 meter) during indoor l
 
 ## Authors
 - **Aditya Prasad**
-- **Pushkar K P**
-- **Rithesh P Chauhan**
 
 *Department of Computer Science (Data Science)*  
 *RV College of Engineering, Bengaluru, India*
